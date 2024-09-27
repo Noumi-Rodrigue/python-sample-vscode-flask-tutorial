@@ -1,36 +1,26 @@
-# Python package
-# Create and test a Python package on multiple Python versions.
-# Add steps that analyze code, save the dist with the build record, publish to a PyPI-compatible index, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/languages/python
-
-trigger:
-- master
-
-pool:
-  vmImage: ubuntu-latest
-strategy:
-  matrix:
-    Python27:
-      python.version: '2.7'
-    Python35:
-      python.version: '3.5'
-    Python36:
-      python.version: '3.6'
-    Python37:
-      python.version: '3.7'
-
-steps:
-- task: UsePythonVersion@0
-  inputs:
-    versionSpec: '$(python.version)'
-  displayName: 'Use Python $(python.version)'
-
-- script: |
-    python -m pip install --upgrade pip
-    pip install -r requirements.txt
-  displayName: 'Install dependencies'
-
-- script: |
-    pip install pytest pytest-azurepipelines
-    pytest
-  displayName: 'pytest'
+pipeline {
+  agent any
+  
+  stages {
+    stage('Créer le compte utilisateur') {
+      steps {
+        script {
+          // Définir les informations utilisateur
+          def username = "Test"
+          def password = "Pa$$w0rd"
+          
+          // Créer l'utilisateur dans OES
+          sh "oesadmin -a ${username} -p ${password} -t user"
+          sh "oesadmin -a ${username} -g default"
+          
+          // Créer l'utilisateur dans Office 365
+          sh "New-MsolUser -UserPrincipalName ${username}@test.com -DisplayName 'Test' -FirstName John -LastName Doe -Password ${password}"
+          sh "Set-MsolUser -UserPrincipalName ${username}@test.com -UsageLocation US"
+          
+          // Créer l'utilisateur dans Oasis
+          sh "oasis adduser ${username} -p ${password} -g default"
+        }
+      }
+    }
+  }
+}
